@@ -3,6 +3,7 @@ package dev.elvir.weatherapi_example.data.db
 import androidx.room.*
 import dev.elvir.weatherapi_example.data.model.WeatherContainer
 import io.reactivex.Completable
+import io.reactivex.Observable
 import io.reactivex.Single
 
 
@@ -10,7 +11,7 @@ import io.reactivex.Single
 interface WeatherDao {
 
     @Query("SELECT * FROM weathercontainer")
-    fun getAll(): Single<List<WeatherContainer>>
+    fun getAll(): Observable<List<WeatherContainer>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(weatherContainer: WeatherContainer) : Completable

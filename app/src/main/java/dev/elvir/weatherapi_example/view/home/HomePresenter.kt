@@ -4,10 +4,12 @@ import android.annotation.SuppressLint
 import dev.elvir.weatherapi_example.data.model.WeatherContainer
 import dev.elvir.weatherapi_example.data.repository.LocalWeatherRepository
 import dev.elvir.weatherapi_example.data.repository.RemoteWeatherRepository
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
+
 
 @SuppressLint("CheckResult")
 class HomePresenter @Inject constructor(
@@ -18,12 +20,15 @@ class HomePresenter @Inject constructor(
     private lateinit var view: HomeContract.View
 
     override fun loadMessage() {
-        remoteWeatherRepository.getWeatherByCity("")
-            .subscribeOn(Schedulers.io())
+        Observable.mergeDelayError(
+            remoteWeatherRepository.getWeatherByCity("")
+                .doOnNext { localWeatherRepository.insert(it) }
+                .subscribeOn(Schedulers.io())
+            , localWeatherRepository.getAllInfo().subscribeOn(Schedulers.io())
+        ).subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                saveData(it)
-                getAll()
+
             }, {
                 it.printStackTrace()
             })
@@ -57,7 +62,7 @@ class HomePresenter @Inject constructor(
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                for (item in it){
+                for (item in it) {
                     view.showMessage(item)
                 }
             }, {
